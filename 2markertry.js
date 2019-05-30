@@ -233,7 +233,7 @@ function processData(data, tt){
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-function init(data, start_screen){
+function init(data, type_swing){
   
   swing = []
   var cnt = 0;
@@ -258,7 +258,7 @@ function init(data, start_screen){
     .range([-j, j]);
   
   //************* look at sections of the swing at a time  
-  if (start_screen == 1){
+  if (type_swing == 1){
     data.map(function(d){
       marker = []
       d.map(function(d){
@@ -268,8 +268,8 @@ function init(data, start_screen){
     });
   }
 
-  //*********** uncomment this part to look at swing sequence
-  else{
+  //*********** individual swing sequence
+  else if (type_swing == 0){
     var t;
    
     for (t = 0; t<data.length; t++){
@@ -286,7 +286,6 @@ function init(data, start_screen){
      }
     }
   }
- 
   
   // create 20x20 grid
     var cnt = 0;
@@ -312,6 +311,8 @@ function init(data, start_screen){
       data_all.push(data);
     })
 
+    
+
     //ready to be plotted
     processData(data_all, 1000);
 
@@ -323,11 +324,11 @@ function init(data, start_screen){
 d3.csv("swing_test.csv").then(function(data, key) {
 
   //start screen to show all data
-  default_start = init_default(data, 0)
+  default_start = init_range(data, 0, 0)
   init(default_start, 1)
 
 
-  //SIMPLE SLIDER BAR
+  //SIMPLE SLIDER BAR///////////////////////////////
   //generate slider bar values
   const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
   //var data2 = range(0,data.length,1);
@@ -352,30 +353,7 @@ d3.csv("swing_test.csv").then(function(data, key) {
       .attr('transform', 'translate(30,30)')
       .call(sliderStep);
     
-  //RANGE SLIDER BAR
-  var sliderRange = d3
-    .sliderBottom()
-    .min(d3.min(data2))
-    .max(d3.max(data2))
-    .width(800)
-    .ticks(5)
-    .default([1, 2])
-    .step(1)
-    .fill('#2196f3')
-    .on('onchange', val => {
-      //console.log(val)
-    });
-
-  var gRange = d3
-    .select('#range')
-    .append('svg')
-    .attr('width', 1000)
-    .attr('height', 100)
-    .append('g')
-    .attr('transform', 'translate(30,30)')
-    .call(sliderRange);
-
-  
+ 
   //slider to change markers shown
   sliderStep
       .on('onchange', val => {
@@ -387,10 +365,47 @@ d3.csv("swing_test.csv").then(function(data, key) {
               
 
               please = init_data_single(data, val)
-            
+              
               init(please, 0);
           });
       });
+
+
+  //RANGE SLIDER BAR////////////////////////////////
+var sliderRange = d3
+  .sliderBottom()
+  .min(d3.min(data2))
+  .max(d3.max(data2))
+  .width(800)
+  .ticks(5)
+  .default([1, 5])
+  .step(1)
+  .fill('#2196f3')
+
+var gRange = d3
+  .select('#range')
+  .append('svg')
+  .attr('width', 1000)
+  .attr('height', 100)
+  .append('g')
+  .attr('transform', 'translate(30,30)')
+  .call(sliderRange);
+
+sliderRange
+  .on('onchange', val => {
+    d3.csv("swing_test.csv").then(function(data, key) {
+
+      //refresh data points/lines
+      d3.selectAll("path").attr('id','lines').remove();
+      d3.selectAll("circle").remove();
+      
+      //console.log(val[1])
+      please = init_range(data, val, 1)
+      
+      init(please, 1);
+  });
+  });
+
 
 });
 
@@ -422,13 +437,18 @@ function init_data_single(data, slice_val){
   return(all_markers)
 }
 
-
 //function to prepare data for init
-function init_default(data, slice_val){
+function init_range(data, slice_val, slider_val){
 
   var columns = data.columns;
 
-  please_work = data.slice(slice_val)
+  //default slice: use all and don't slice
+  if (slider_val == 0){
+  please_work = data}
+  //range slider slice
+  else if(slider_val == 1){
+  please_work = data.slice(slice_val[0], slice_val[1])
+  }
   
   var center_face_original = []
   var center_face = []
@@ -473,9 +493,7 @@ function init_default(data, slice_val){
     })
     })
 
-    var all_markers = [center_face, grip, hosel_center, Lframe_face, Lframe_loft, center_face_original]
-
-    console.log(all_markers)
+  var all_markers = [center_face, grip, hosel_center, Lframe_face, Lframe_loft, center_face_original]
 
   return(all_markers)
 }

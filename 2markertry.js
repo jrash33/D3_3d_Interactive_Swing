@@ -2,7 +2,7 @@
 var svgWidth = 2000;
 var svgHeight = 1000;
 
-var origin = [800, 450], j = 20, scale = 20, beta = 0, alpha = 0, key = function(d){ return d.id; }, startAngle = Math.PI/4;
+var origin = [800, 500], j = 20, scale = 20, beta = 0, alpha = 0, key = function(d){ return d.id; }, startAngle = Math.PI/4;
 var svg    = d3.select('#scatter')
             .append("svg")
             .attr("height", svgHeight)
@@ -123,19 +123,6 @@ function processData(data, tt){
 
     lines = svg.selectAll("myLines").data(test).enter();
 
-    // var parent = svg.selectAll("myLines").data(test);
-    // var pathGroup = parent.append("g")
-    // .attr("id", "groupOfPaths")
-
-    // pathGroup.append("path").attr("d", line_updated(line_array))
-    // pathGroup.append("path").attr("d", line_updated(line_array))
-
-    // var combinedD = "";
-    // pathGroup.selectAll("path")
-    //   .each(function() {combinedD += d3.select(this).attr("d"); });
-    // parent.append("path")
-    //   .attr("d", combinedD);
-
 
     //line 1 connection grip to hosel
     lines
@@ -172,8 +159,7 @@ function processData(data, tt){
           .attr("stroke-width", 2)
           .attr("fill", "none");
 
-      
-
+    
     lines.exit().remove();
 
 
@@ -247,7 +233,7 @@ function processData(data, tt){
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-function init(data){
+function init(data, start_screen){
   
   swing = []
   var cnt = 0;
@@ -271,31 +257,36 @@ function init(data){
     ])
     .range([-j, j]);
   
-  // ************* look at sections of the swing at a time  
-  // data.map(function(d){
-  //   marker = []
-  //   d.map(function(d){
-  //     marker.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
-  //   })
-  //   swing.push(marker);
-  // })
-
-  //*********** uncomment this part to look at swing sequence
-   var t;
-   
-   for (t = 0; t<data.length; t++){
-    var marker = []
-    if (t == data.length-1){
-      data[t].map(function(d){
+  //************* look at sections of the swing at a time  
+  if (start_screen == 1){
+    data.map(function(d){
+      marker = []
+      d.map(function(d){
         marker.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
       })
-      swing.push(marker)
+      swing.push(marker);
+    });
+  }
+
+  //*********** uncomment this part to look at swing sequence
+  else{
+    var t;
+   
+    for (t = 0; t<data.length; t++){
+     var marker = []
+     if (t == data.length-1){
+       data[t].map(function(d){
+         marker.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
+       })
+       swing.push(marker)
+     }
+     else{
+       marker.push({x: xScale(data[t].x), y: yScale(data[t].y), z: zScale(data[t].z), id: 'point_0'});
+       swing.push(marker)
+     }
     }
-    else{
-      marker.push({x: xScale(data[t].x), y: yScale(data[t].y), z: zScale(data[t].z), id: 'point_0'});
-      swing.push(marker)
-    }
-   }
+  }
+ 
   
   // create 20x20 grid
     var cnt = 0;
@@ -331,6 +322,12 @@ function init(data){
 //MAIN
 d3.csv("swing_test.csv").then(function(data, key) {
 
+  //start screen to show all data
+  default_start = init_default(data, 0)
+  init(default_start, 1)
+
+
+  //SIMPLE SLIDER BAR
   //generate slider bar values
   const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
   //var data2 = range(0,data.length,1);
@@ -353,10 +350,32 @@ d3.csv("swing_test.csv").then(function(data, key) {
       .append('g')
       .attr('transform', 'translate(30,30)')
       .call(sliderStep);
+    
+  //RANGE SLIDER BAR
+  var sliderRange = d3
+    .sliderBottom()
+    .min(d3.min(data2))
+    .max(d3.max(data2))
+    .width(800)
+    .ticks(5)
+    .default([1, 2])
+    .step(1)
+    .fill('#2196f3')
+    .on('onchange', val => {
+      //console.log(val)
+    });
+
+  var gRange = d3
+    .select('#range')
+    .append('svg')
+    .attr('width', 1000)
+    .attr('height', 100)
+    .append('g')
+    .attr('transform', 'translate(30,30)')
+    .call(sliderRange);
+
   
 
-  //default_start = init_data(data, 0)
-  //init(default_start)
 
   //slider to change markers shown
   sliderStep
@@ -369,7 +388,7 @@ d3.csv("swing_test.csv").then(function(data, key) {
 
               please = init_data_single(data, val)
             
-              init(please);
+              init(please, 0);
           });
       });
 
@@ -405,7 +424,7 @@ function init_data_single(data, slice_val){
 
 
 //function to prepare data for init
-function init_data(data, slice_val){
+function init_default(data, slice_val){
 
   var columns = data.columns;
 
@@ -414,29 +433,49 @@ function init_data(data, slice_val){
   var center_face_original = []
   var center_face = []
   var grip = []
+  var Lframe_face = []
+  var Lframe_loft = []
+  var hosel_center = []
 
   data.map(function(d){
     center_face_original.push({
-      "x" : +d[columns[0]],
-      "y": +d[columns[1]],
-      "z": +d[columns[2]],
+      "x" : +d.xHoselCenter,
+      "y": +d.yHoselCenter,
+      "z": +d.zHoselCenter,
       })
   })
 
   please_work.map(function(d){
     center_face.push({
-      "x" : +d[columns[0]],
-      "y": +d[columns[1]],
-      "z": +d[columns[2]],
+      "x" : +d.xCenterFace,
+      "y": +d.yCenterFace,
+      "z": +d.zCenterFace,
       })
     grip.push({
-      "x": +d[columns[3]],
-      "y": +d[columns[4]],
-      "z": +d[columns[5]]
+      "x": +d.xGripTop,
+      "y": +d.yGripTop,
+      "z": +d.zGripTop
+    })
+    hosel_center.push({
+      "x": +d.xHoselCenter,
+      "y": +d.yHoselCenter,
+      "z": +d.zHoselCenter
+    })
+    Lframe_face.push({
+      "x": +d.xLFrameFace,
+      "y": +d.yLFrameFace,
+      "z": +d.zLFrameFace
+    })
+    Lframe_loft.push({
+      "x": +d.xLFrameLoft,
+      "y": +d.yLFrameLoft,
+      "z": +d.zLFrameLoft
     })
     })
 
-  var all_markers = [center_face, grip, center_face_original]
+    var all_markers = [center_face, grip, hosel_center, Lframe_face, Lframe_loft, center_face_original]
+
+    console.log(all_markers)
 
   return(all_markers)
 }

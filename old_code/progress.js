@@ -1,3 +1,4 @@
+console.log("hie")
 // Define SVG area dimensions
 var svgWidth = 2000;
 var svgHeight = 1000;

@@ -272,29 +272,9 @@ d3.csv("swing_test.csv").then(function(data, key) {
       .attr('transform', 'translate(30,30)')
       .call(sliderStep);
   
-  //get column names for easy formatting
-  var columns = data.columns;
- 
-  //slice data and prepare
-  var center_face = []
-  var grip = []
 
-  data.map(function(d){
-  center_face.push({
-    "x" : +d[columns[0]],
-    "y": +d[columns[1]],
-    "z": +d[columns[2]],
-    })
-  grip.push({
-    "x": +d[columns[3]],
-    "y": +d[columns[4]],
-    "z": +d[columns[5]]
-  })
-  });
-
-  //var all_markers = [center_face, grip]
-
-  //init(all_markers);
+  default_start = init_data(data, 0)
+  init(default_start)
 
   //slider to change markers shown
   sliderStep

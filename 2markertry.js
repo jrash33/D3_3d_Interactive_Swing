@@ -66,52 +66,116 @@ function processData(data, tt){
     xGrid.exit().remove();
 
     //test
-    test = [data[2], data[0], data[1]];
+    test = [data[0], data[1], data[2], data[3], data[4], data[5]];
 
-    //LINE ARRAY
-    array1=[]
-    array2=[]
+    //LINE ARRAYS
+    center_face_array=[]
+    grip_array=[]
+    hosel_center_array=[]
+    Lframe_face_array=[]
+    Lframe_loft_array=[]
 
-    data[0][1].forEach(function(d){
-      array1.push(d.projected)
+    //hosel_center
+    data[2][1].forEach(function(d){
+      hosel_center_array.push(d.projected)
     })
 
+    //grip
     data[1][1].forEach(function(d){
-      array2.push(d.projected)
+      grip_array.push(d.projected)
     })
+
+    //center_face
+    data[0][1].forEach(function(d){
+      center_face_array.push(d.projected)
+    })
+
+    //Lframe_face
+    data[3][1].forEach(function(d){
+      Lframe_face_array.push(d.projected)
+    })
+
+    //Lframe_loft
+    data[4][1].forEach(function(d){
+      Lframe_loft_array.push(d.projected)
+    })
+
     
-    //cross combine
+    //cross combine in order of lines you want to connect
     line_array = []
-    for (i=0; i<array1.length; i++){
-      line_array.push(array1[i])
-      line_array.push(array2[i])
+    line_array2 = []
+    for (i=0; i<hosel_center_array.length; i++){
+      line_array.push(grip_array[i])
+      line_array.push(hosel_center_array[i])
+      line_array2.push(center_face_array[i])
+      line_array2.push(Lframe_face_array[i])
+      line_array2.push(Lframe_loft_array[i])
+      line_array2.push(center_face_array[i])
     }
     
-  
     var line_updated = d3.line()
       .x(d => d.x)
       .y(d => d.y)
 
 
     points = svg.selectAll().data(test);
+    
 
-    lines = svg.selectAll("myLines").data(test);
+    lines = svg.selectAll("myLines").data(test).enter();
+
+    // var parent = svg.selectAll("myLines").data(test);
+    // var pathGroup = parent.append("g")
+    // .attr("id", "groupOfPaths")
+
+    // pathGroup.append("path").attr("d", line_updated(line_array))
+    // pathGroup.append("path").attr("d", line_updated(line_array))
+
+    // var combinedD = "";
+    // pathGroup.selectAll("path")
+    //   .each(function() {combinedD += d3.select(this).attr("d"); });
+    // parent.append("path")
+    //   .attr("d", combinedD);
 
 
+    //line 1 connection grip to hosel
     lines
-      .enter()
       //.append("g")
       //.selectAll()
       .append("path")
+      .attr('id', 'lines')
         .attr("d", line_updated(line_array))
+        //.attr("d", line_updated(line_array2))
         .attr("stroke", "darkred")
         .attr('fill', 'none')
         .attr('opacity', .3)
         .style('stroke-width', 1);
+      
+    lines
+      .append("path")
+      .attr('id','lines')
+        .attr("d", line_updated(line_array2))
+        .attr("stroke", "blue")
+        .attr('fill', 'blue')
+        .attr('fill-opacity', .1)
+        .attr('opacity', .3)
+        .style('stroke-width', 1);
+      
+      var combinedD = "";
+
+      lines.selectAll('id','lines').each(function() { combinedD += d3.select(this).attr("d"); });
+
+      lines.remove();
+
+      lines.append("path")
+          .attr("d", combinedD)
+          .attr("stroke", "red")
+          .attr("stroke-width", 2)
+          .attr("fill", "none");
+
+      
+
     lines.exit().remove();
 
-
-    
 
     points = svg
       .selectAll()
@@ -190,30 +254,48 @@ function init(data){
 
   // create scales based off of only one marker set (default: center_face)
   var xScale = d3.scaleLinear()
-    .domain([d3.min(data[2], d => d.x),
-    d3.max(data[2], d => d.x) 
+    .domain([d3.min(data[data.length-1], d => d.x),
+    d3.max(data[data.length-1], d => d.x) 
     ])
     .range([-j, j]);
 
   var yScale = d3.scaleLinear()
-    .domain([d3.min(data[2], d => d.y),
-    d3.max(data[2], d => d.y) 
+    .domain([d3.min(data[data.length-1], d => d.y),
+    d3.max(data[data.length-1], d => d.y) 
     ])
     .range([0, -j]);
 
   var zScale = d3.scaleLinear()
-    .domain([d3.min(data[2], d => d.z),
-    d3.max(data[2], d => d.z) 
+    .domain([d3.min(data[data.length-1], d => d.z),
+    d3.max(data[data.length-1], d => d.z) 
     ])
     .range([-j, j]);
   
-  data.map(function(d){
-    marker = []
-    d.map(function(d){
-      marker.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
-    })
-    swing.push(marker);
-  })
+  // ************* look at sections of the swing at a time  
+  // data.map(function(d){
+  //   marker = []
+  //   d.map(function(d){
+  //     marker.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
+  //   })
+  //   swing.push(marker);
+  // })
+
+  //*********** uncomment this part to look at swing sequence
+   var t;
+   
+   for (t = 0; t<data.length; t++){
+    var marker = []
+    if (t == data.length-1){
+      data[t].map(function(d){
+        marker.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
+      })
+      swing.push(marker)
+    }
+    else{
+      marker.push({x: xScale(data[t].x), y: yScale(data[t].y), z: zScale(data[t].z), id: 'point_0'});
+      swing.push(marker)
+    }
+   }
   
   // create 20x20 grid
     var cnt = 0;
@@ -273,8 +355,8 @@ d3.csv("swing_test.csv").then(function(data, key) {
       .call(sliderStep);
   
 
-  default_start = init_data(data, 0)
-  init(default_start)
+  //default_start = init_data(data, 0)
+  //init(default_start)
 
   //slider to change markers shown
   sliderStep
@@ -285,13 +367,41 @@ d3.csv("swing_test.csv").then(function(data, key) {
               d3.selectAll("circle").remove();
               d3.selectAll("path").remove();
 
-              please = init_data(data, val)
+              please = init_data_single(data, val)
             
               init(please);
           });
       });
 
 });
+
+//function to prepare data for init
+function init_data_single(data, slice_val){
+
+  var columns = data.columns;
+
+  //please_work = data.slice(slice_val)
+  marker = data[slice_val]
+  
+  var center_face = {"x": +marker.xCenterFace, "y": +marker.yCenterFace, "z": +marker.zCenterFace};
+  var grip = {"x": +marker.xGripTop, "y": +marker.yGripTop, "z": +marker.zGripTop};
+  var hosel_center = {"x": +marker.xHoselCenter, "y": +marker.yHoselCenter, "z": +marker.zHoselCenter};
+  var Lframe_face = {"x": +marker.xLFrameFace, "y": +marker.yLFrameFace, "z": +marker.zLFrameFace};
+  var Lframe_loft = {"x": +marker.xLFrameLoft, "y": +marker.yLFrameLoft, "z": +marker.zLFrameLoft};
+  
+  var center_face_original = [];
+  data.map(function(d){
+    center_face_original.push({
+      "x" : +d.xHoselCenter,
+      "y": +d.yHoselCenter,
+      "z": +d.zHoselCenter,
+      })
+  })
+
+  var all_markers = [center_face, grip, hosel_center, Lframe_face, Lframe_loft, center_face_original]
+
+  return(all_markers)
+}
 
 
 //function to prepare data for init

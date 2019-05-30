@@ -50,7 +50,7 @@ var yScale3d = d3._3d()
 function processData(data, tt){
 
     //APPEND GRID
-    var xGrid = svg.selectAll('path.grid').data(data[0][0], key);
+    var xGrid = svg.selectAll('path.grid').data(data[2][0], key);
         
     xGrid
         .enter()
@@ -66,34 +66,7 @@ function processData(data, tt){
     xGrid.exit().remove();
 
     //test
-    test = [data[0], data[1]];
-
-    // points = svg
-    //           .selectAll()
-    //           .data(test)
-    //           .enter()
-    //           //.append('g')
-    //           .selectAll('circle')
-    //           .data(function(d){return d[1]});
-
-    // points
-    //   .enter()
-    //   .append('circle')
-    //   .attr('class', '_3d')
-    //     //transition effect
-    //     // .attr('opacity', 0)
-    //     // .attr('cx', d => d.projected.x)
-    //     // .attr('cy', d => d.projected.y)
-    //     .merge(points)
-    //     // .transition().duration(tt)
-    //   .attr('r', 2)
-    //   .attr('stroke', 'gray')
-    //   .attr('fill', function(d){ return color(d.id); })
-    //   .attr('opacity', .9)
-    //   .attr('cx', d => d.projected.x)
-    //   .attr('cy', d => d.projected.y);
-
-    // points.exit().remove();
+    test = [data[2], data[0], data[1]];
 
     //LINE ARRAY
     array1=[]
@@ -115,7 +88,6 @@ function processData(data, tt){
     }
     
   
-
     var line_updated = d3.line()
       .x(d => d.x)
       .y(d => d.y)
@@ -161,38 +133,15 @@ function processData(data, tt){
         // .transition().duration(tt)
       .attr('r', 2)
       .attr('stroke', 'gray')
-      .attr('fill', function(d){ return color(d.id); })
+      //.attr('fill', function(d){ return color(d.id); })\
+      //.attr('fill', 'none')
       .attr('opacity', .9)
       .attr('cx', d => d.projected.x)
-      .attr('cy', d => d.projected.y);
+      .attr('cy', d => d.projected.y)
+
 
 
     points.exit().remove();
-
-
-    // points
-    //   .enter()
-    //   .append('g')
-    //   .selectAll('circle')
-    //   .data(function(d){ return d[1]})
-    //   .enter()
-    //   .append('circle')
-    //   //.attr('class', '_3d')
-    //     // //transition effect
-    //     // .attr('opacity', 0)
-    //     // .attr('cx', d => d.projected.x)
-    //     // .attr('cy', d => d.projected.y)
-    //     //.merge(points)
-    //     //.transition().duration(tt)
-    //   .attr('r', 2)
-    //   .attr('stroke', 'gray')
-    //   //.attr('fill', function(d){ return color(d.id); })
-    //   .attr('opacity', .9)
-    //   .attr('cx', d => d.projected.x)
-    //   .attr('cy', d => d.projected.y)
-
-
-    // points.exit().remove();
 
     // APPEND Y AXIS
     var yScale = svg.selectAll('path.yScale').data(data[0][2]);
@@ -241,20 +190,20 @@ function init(data){
 
   // create scales based off of only one marker set (default: center_face)
   var xScale = d3.scaleLinear()
-    .domain([d3.min(data[0], d => d.x),
-    d3.max(data[0], d => d.x) 
+    .domain([d3.min(data[2], d => d.x),
+    d3.max(data[2], d => d.x) 
     ])
     .range([-j, j]);
 
   var yScale = d3.scaleLinear()
-    .domain([d3.min(data[0], d => d.y),
-    d3.max(data[0], d => d.y) 
+    .domain([d3.min(data[2], d => d.y),
+    d3.max(data[2], d => d.y) 
     ])
     .range([0, -j]);
 
   var zScale = d3.scaleLinear()
-    .domain([d3.min(data[0], d => d.z),
-    d3.max(data[0], d => d.z) 
+    .domain([d3.min(data[2], d => d.z),
+    d3.max(data[2], d => d.z) 
     ])
     .range([-j, j]);
   
@@ -323,29 +272,9 @@ d3.csv("swing_test.csv").then(function(data, key) {
       .attr('transform', 'translate(30,30)')
       .call(sliderStep);
   
-  //get column names for easy formatting
-  var columns = data.columns;
- 
-  //slice data and prepare
-  var center_face = []
-  var grip = []
 
-  data.map(function(d){
-  center_face.push({
-    "x" : +d[columns[0]],
-    "y": +d[columns[1]],
-    "z": +d[columns[2]],
-    })
-  grip.push({
-    "x": +d[columns[3]],
-    "y": +d[columns[4]],
-    "z": +d[columns[5]]
-  })
-  })
-
-  var all_markers = [center_face, grip]
-
-  init(all_markers);
+  default_start = init_data(data, 0)
+  init(default_start)
 
   //slider to change markers shown
   sliderStep
@@ -355,38 +284,52 @@ d3.csv("swing_test.csv").then(function(data, key) {
               //refresh data points/lines
               d3.selectAll("circle").remove();
               d3.selectAll("path").remove();
-              
-              please_work = data.slice(val)
 
-              //slice data and prepare
-              //make function for this later
-              var center_face = []
-              var grip = []
-
-              please_work.map(function(d){
-              center_face.push({
-                "x" : +d[columns[0]],
-                "y": +d[columns[1]],
-                "z": +d[columns[2]],
-                })
-              grip.push({
-                "x": +d[columns[3]],
-                "y": +d[columns[4]],
-                "z": +d[columns[5]]
-              })
-              })
-
-              var please = [center_face, grip]
-
+              please = init_data(data, val)
+            
               init(please);
           });
       });
 
-
-
-
-
 });
+
+
+//function to prepare data for init
+function init_data(data, slice_val){
+
+  var columns = data.columns;
+
+  please_work = data.slice(slice_val)
+  
+  var center_face_original = []
+  var center_face = []
+  var grip = []
+
+  data.map(function(d){
+    center_face_original.push({
+      "x" : +d[columns[0]],
+      "y": +d[columns[1]],
+      "z": +d[columns[2]],
+      })
+  })
+
+  please_work.map(function(d){
+    center_face.push({
+      "x" : +d[columns[0]],
+      "y": +d[columns[1]],
+      "z": +d[columns[2]],
+      })
+    grip.push({
+      "x": +d[columns[3]],
+      "y": +d[columns[4]],
+      "z": +d[columns[5]]
+    })
+    })
+
+  var all_markers = [center_face, grip, center_face_original]
+
+  return(all_markers)
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////

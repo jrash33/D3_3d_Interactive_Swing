@@ -340,7 +340,8 @@ d3.csv("swing_test.csv").then(function(data, key) {
       .width(800)
       .ticks(5)
       .step(1)
-      .default(0.015);
+      .default(0)
+      .fill('#2196f3');
 
   var gSimple = d3
       .select('#slider')
@@ -375,16 +376,15 @@ d3.csv("swing_test.csv").then(function(data, key) {
     .call(sliderRange);
 
   
-
-
   //slider to change markers shown
   sliderStep
       .on('onchange', val => {
           d3.csv("swing_test.csv").then(function(data, key) {
 
               //refresh data points/lines
+              d3.selectAll("path").attr('id','lines').remove();
               d3.selectAll("circle").remove();
-              d3.selectAll("path").remove();
+              
 
               please = init_data_single(data, val)
             
@@ -490,7 +490,7 @@ function dragStart(){
 
 function dragged(){
     d3.selectAll("circle").remove();
-    d3.selectAll("path").remove();
+    d3.selectAll("path").attr('id','lines').remove();
     
     mouseX = mouseX || 0;
     mouseY = mouseY || 0;

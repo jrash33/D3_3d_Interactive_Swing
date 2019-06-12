@@ -248,7 +248,8 @@ function init(data, type_swing){
   //SWINGS
   var cnt = 0;
 
-  // create scales based off of only one marker set (default: center_face)
+  // create scales based off of first swing (default: center_face)
+  // note: advise using largest x/y dimension swing as first in list
   var xScale = d3.scaleLinear()
     .domain([d3.min(data[0][data[0].length-1], d => d.x),
     d3.max(data[0][data[0].length-1], d => d.x) 
@@ -268,22 +269,35 @@ function init(data, type_swing){
     .range([-j, j]);
   
   //************* look at sections of the swing at a time  
-  all_swings = []
+  
   if (type_swing == 1){
+
+    //will hold the swing coordinates for drag rotation function later
+    all_swings = []
+    //plot parameters to be passed to processData function
     data_all = []
+
+    //loop through each swing
     data.forEach(function(data_ind){
+      
+      //holds new scaled swing coordinates
       swing = []
+
       data_ind.map(function(d){
       marker = []
       d.map(function(d){
+        //push new scaled coordinates to marker
         marker.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
-        })
+        });
+        //push again to swing list to separate swings
         swing.push(marker);
       })
       
+      //push to var all_swings for drag function
       all_swings.push(swing)
-      var data1 = [];
 
+      var data1 = [];
+      //format data for plot function
       swing.forEach(function(d){
         var data = [
           grid3d(xGrid),
@@ -293,38 +307,60 @@ function init(data, type_swing){
         data1.push(data);
       })
 
+      //push complete formatted swing to list to hold all completed swings
       data_all.push(data1)
     })
   }
+
+
   //*********** individual swing sequence
   else if (type_swing == 0){
+
+    //will hold the swing coordinates for drag rotation function later
+    all_swings = []
+    //plot parameters to be passed to processData function
+    data_all = []
     var t;
-   
-    for (t = 0; t<data[0].length; t++){
-     var marker = [];
-     var marker2 = [];
-     if (t == data[0].length-1){
-         data[0][t].map(function(d){
-         marker.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
+    x = [];
+
+    //loop through each swing
+    data.forEach(function(data_ind){
+      x.push(data_ind)
+      swing = []
+      for (t = 0; t<x[0].length; t++){
+        var marker = [];
+        if (t == x[0].length-1){
+            data_ind[t].map(function(d){
+            marker.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
+          })
+          swing.push(marker)
+        }
+        else{
+          marker.push({x: xScale(data_ind[t].x), y: yScale(data_ind[t].y), z: zScale(data_ind[t].z), id: 'point_0'});
+          swing.push(marker)
+        }
+       }
+       
+       //for drag function
+       all_swings.push(swing)
+
+
+       var data1 = [];
+ 
+       swing.forEach(function(d){
+         var data = [
+           grid3d(xGrid),
+           point3d(d),
+           yScale3d([yLine])
+         ];
+         data1.push(data);
        })
+ 
+       data_all.push(data1)
 
-       data[1][t].map(function(d){
-        marker2.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
-       })
-
-       swing.push(marker)
-       swing2.push(marker2)
-     }
-     else{
-       marker.push({x: xScale(data[0][t].x), y: yScale(data[0][t].y), z: zScale(data[0][t].z), id: 'point_0'});
-       swing.push(marker)
-
-       marker2.push({x: xScale(data[1][t].x), y: yScale(data[1][t].y), z: zScale(data[1][t].z), id: 'point_0'});
-       swing2.push(marker2)
-     }
-    }
+    });
+  
   }
-
 
   //ready to be plotted
   processData(data_all, 1000);
@@ -402,8 +438,6 @@ Promise.all([
               please2 = init_data_single(data[1], val)
 
               please_work = [please, please2]
-
-              console.log(please_work)
               
               init(please_work, 0);
           });

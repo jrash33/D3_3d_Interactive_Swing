@@ -43,10 +43,127 @@ var yScale3d = d3._3d()
     .scale(scale);
 
 
+function plot_swing(data, color_code){
+  
+  //test
+  test = [data[0], data[1], data[2], data[3], data[4], data[5]];
+
+  //LINE ARRAYS
+  center_face_array=[]
+  grip_array=[]
+  hosel_center_array=[]
+  Lframe_face_array=[]
+  Lframe_loft_array=[]
+
+  //center_face
+  data[0][1].forEach(function(d){
+    center_face_array.push(d.projected)
+  })
+
+  //grip
+  data[1][1].forEach(function(d){
+    grip_array.push(d.projected)
+  })
+
+  //hosel_center
+  data[2][1].forEach(function(d){
+    hosel_center_array.push(d.projected)
+  })
+
+  //Lframe_face
+  data[3][1].forEach(function(d){
+    Lframe_face_array.push(d.projected)
+  })
+
+  //Lframe_loft
+  data[4][1].forEach(function(d){
+    Lframe_loft_array.push(d.projected)
+  })
+
+  //cross combine in order of lines you want to connect
+  line_array = []
+  line_array2 = []
+  for (i=0; i<hosel_center_array.length; i++){
+    line_array.push(grip_array[i])
+    line_array.push(hosel_center_array[i])
+    line_array2.push(center_face_array[i])
+    line_array2.push(Lframe_face_array[i])
+    line_array2.push(Lframe_loft_array[i])
+    line_array2.push(center_face_array[i])
+  }
     
+  var line_updated = d3.line()
+    .x(d => d.x)
+    .y(d => d.y)
+
+
+  if (color_code == 0){
+    var shaft_color = 'darkred'
+    var face_color = 'blue'
+  }
+  else if (color_code == 1){
+    var shaft_color = 'grey'
+    var face_color = 'green'
+  }
+  
+
+  lines = svg.selectAll("myLines")
+
+  //line 1 connection grip to hosel
+  lines
+    .data(test)
+    .enter()
+    .append("path")
+    .attr('id', 'lines')
+      .attr("d", line_updated(line_array))
+      .attr("stroke", shaft_color)
+      .attr('fill', 'none')
+      .attr('opacity', .3)
+      .style('stroke-width', 1);
+      
+  lines
+    .data(test)
+    .enter()
+    .append("path")
+    .attr('id','lines')
+      .attr("d", line_updated(line_array2))
+      .attr("stroke", face_color)
+      .attr('fill', face_color)
+      .attr('fill-opacity', .1)
+      .attr('opacity', .3)
+      .style('stroke-width', 1);
+
+
+   points = svg
+      .selectAll('swing1')
+      .data(test)
+      .enter()
+      .append('g')
+      .selectAll('circle')
+      .data(function(d){return d[1]});
+
+    points
+      .enter()
+      .append('circle')
+      .attr('class', 'swing1')
+      .attr('r', 2)
+      .attr('stroke', 'gray')
+      .attr('opacity', .9)
+      .attr('cx', d => d.projected.x)
+      .attr('cy', d => d.projected.y)
+
+
+
+    points.exit().remove();
+  
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////    
 // function to plot data [input: data object with grid/points/axis parameters]
 function processData(data, tt){
+
 
     //APPEND GRID
     var xGrid = svg.selectAll('path.grid').data(data[0][2][0], key);
@@ -64,244 +181,13 @@ function processData(data, tt){
     
     xGrid.exit().remove();
 
-    //test
-    test = [data[0][0], data[0][1], data[0][2], data[0][3], data[0][4], data[0][5]];
-    test2 = [data[1][0], data[1][1], data[1][2], data[1][3], data[1][4], data[1][5]];
 
-    //FIRST SWING*******************************
-    //LINE ARRAYS
-    center_face_array=[]
-    grip_array=[]
-    hosel_center_array=[]
-    Lframe_face_array=[]
-    Lframe_loft_array=[]
-
-    //hosel_center
-    data[0][2][1].forEach(function(d){
-      hosel_center_array.push(d.projected)
+    //plot swings
+    var count = 0;
+    data.forEach(function(d){
+      plot_swing(d, count);
+      count += 1;
     })
-
-    //grip
-    data[0][1][1].forEach(function(d){
-      grip_array.push(d.projected)
-    })
-
-    //center_face
-    data[0][0][1].forEach(function(d){
-      center_face_array.push(d.projected)
-    })
-
-    //Lframe_face
-    data[0][3][1].forEach(function(d){
-      Lframe_face_array.push(d.projected)
-    })
-
-    //Lframe_loft
-    data[0][4][1].forEach(function(d){
-      Lframe_loft_array.push(d.projected)
-    })
-
-    
-    //cross combine in order of lines you want to connect
-    line_array = []
-    line_array2 = []
-    for (i=0; i<hosel_center_array.length; i++){
-      line_array.push(grip_array[i])
-      line_array.push(hosel_center_array[i])
-      line_array2.push(center_face_array[i])
-      line_array2.push(Lframe_face_array[i])
-      line_array2.push(Lframe_loft_array[i])
-      line_array2.push(center_face_array[i])
-    }
-    
-    var line_updated = d3.line()
-      .x(d => d.x)
-      .y(d => d.y)
-
-
-    //SECOND SWING*******************************
-    //LINE ARRAYS
-    center_face_array2=[]
-    grip_array2=[]
-    hosel_center_array2=[]
-    Lframe_face_array2=[]
-    Lframe_loft_array2=[]
-
-    //hosel_center
-    data[1][2][1].forEach(function(d){
-      hosel_center_array2.push(d.projected)
-    })
-
-    //grip
-    data[1][1][1].forEach(function(d){
-      grip_array2.push(d.projected)
-    })
-
-    //center_face
-    data[1][0][1].forEach(function(d){
-      center_face_array2.push(d.projected)
-    })
-
-    //Lframe_face
-    data[1][3][1].forEach(function(d){
-      Lframe_face_array2.push(d.projected)
-    })
-
-    //Lframe_loft
-    data[1][4][1].forEach(function(d){
-      Lframe_loft_array2.push(d.projected)
-    })
-
-    
-    //cross combine in order of lines you want to connect
-    line_arrayx = []
-    line_array2x = []
-    for (i=0; i<hosel_center_array2.length; i++){
-      line_arrayx.push(grip_array2[i])
-      line_arrayx.push(hosel_center_array2[i])
-      line_array2x.push(center_face_array2[i])
-      line_array2x.push(Lframe_face_array2[i])
-      line_array2x.push(Lframe_loft_array2[i])
-      line_array2x.push(center_face_array2[i])
-    }
-
-
-    //PLOT****************************************
-    //points = svg.selectAll().data(test);
-    
-
-    lines = svg.selectAll("myLines")//.data(test2).enter();
-
-
-    //line 1 connection grip to hosel
-    lines
-      //.append("g")
-      //.selectAll()
-      .data(test)
-      .enter()
-      .append("path")
-      .attr('id', 'lines')
-        .attr("d", line_updated(line_array))
-        //.attr("d", line_updated(line_array2))
-        .attr("stroke", "darkred")
-        .attr('fill', 'none')
-        .attr('opacity', .3)
-        .style('stroke-width', 1);
-      
-    lines
-      .data(test)
-      .enter()
-      .append("path")
-      .attr('id','lines')
-        .attr("d", line_updated(line_array2))
-        .attr("stroke", "blue")
-        .attr('fill', 'blue')
-        .attr('fill-opacity', .1)
-        .attr('opacity', .3)
-        .style('stroke-width', 1);
-
-    lines
-      .data(test2)
-      .enter()
-      //.append("g")
-      //.selectAll()
-      .append("path")
-      .attr('id', 'lines')
-        .attr("d", line_updated(line_arrayx))
-        //.attr("d", line_updated(line_array2))
-        .attr("stroke", "grey")
-        .attr('fill', 'none')
-        .attr('opacity', .3)
-        .style('stroke-width', 1);
-      
-    lines
-      .data(test2)
-      .enter()
-      .append("path")
-      .attr('id','lines')
-        .attr("d", line_updated(line_array2x))
-        .attr("stroke", "green")
-        .attr('fill', 'green')
-        .attr('fill-opacity', .1)
-        .attr('opacity', .3)
-        .style('stroke-width', 1);
-      
-      var combinedD = "";
-
-      lines.selectAll('id','lines').each(function() { combinedD += d3.select(this).attr("d"); });
-
-      lines.remove();
-
-      lines.append("path")
-          .attr("d", combinedD)
-          .attr("stroke", "red")
-          .attr("stroke-width", 2)
-          .attr("fill", "none");
-
-    
-    lines.exit().remove();
-
-
-    points = svg
-      .selectAll('swing1')
-      .data(test)
-      .enter()
-      .append('g')
-      .selectAll('circle')
-      .data(function(d){return d[1]});
-
-    points
-      .enter()
-      .append('circle')
-      .attr('class', 'swing1')
-        //transition effect
-        // .attr('opacity', 0)
-        // .attr('cx', d => d.projected.x)
-        // .attr('cy', d => d.projected.y)
-        //.merge(points)
-        // .transition().duration(tt)
-      .attr('r', 2)
-      .attr('stroke', 'gray')
-      //.attr('fill', function(d){ return color(d.id); })\
-      //.attr('fill', 'none')
-      .attr('opacity', .9)
-      .attr('cx', d => d.projected.x)
-      .attr('cy', d => d.projected.y)
-
-
-
-    points.exit().remove();
-
-
-  points2 = svg
-    .selectAll('swing2')
-    .data(test2)
-    .enter()
-    .append('g')
-    .selectAll('circle')
-    .data(function(d){return d[1]});
-
-  points2
-    .enter()
-    .append('circle')
-    .attr('class', 'swing2')
-      //transition effect
-      // .attr('opacity', 0)
-      // .attr('cx', d => d.projected.x)
-      // .attr('cy', d => d.projected.y)
-      //.merge(points)
-      // .transition().duration(tt)
-    .attr('r', 2)
-    .attr('stroke', 'gray')
-    //.attr('fill', function(d){ return color(d.id); })\
-    //.attr('fill', 'none')
-    .attr('opacity', .9)
-    .attr('cx', d => d.projected.x)
-    .attr('cy', d => d.projected.y)
-
-
-
-  points2.exit().remove();
 
 
     // APPEND Y AXIS
@@ -345,9 +231,21 @@ function processData(data, tt){
 ///////////////////////////////////////////////////////////////////////////////////////
 
 function init(data, type_swing){
-  
-  swing = []
-  swing2 = []
+
+  // create 20x20 grid
+  var cnt = 0;
+  xGrid = [], scatter = [], yLine = [];
+  for(var z = -j; z < j; z++){
+      for(var x = -j; x < j; x++){
+          xGrid.push([x, 1, z]);
+      }
+  }
+
+  //y axis line
+  d3.range(-1, j+1, 1).forEach(function(d){ yLine.push([-j, -d, -j]); });
+
+
+  //SWINGS
   var cnt = 0;
 
   // create scales based off of only one marker set (default: center_face)
@@ -370,24 +268,33 @@ function init(data, type_swing){
     .range([-j, j]);
   
   //************* look at sections of the swing at a time  
+  all_swings = []
   if (type_swing == 1){
-    //swing 1
-    data[0].map(function(d){
+    data_all = []
+    data.forEach(function(data_ind){
+      swing = []
+      data_ind.map(function(d){
       marker = []
       d.map(function(d){
         marker.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
+        })
+        swing.push(marker);
       })
-      swing.push(marker);
-    });
+      
+      all_swings.push(swing)
+      var data1 = [];
 
-   //swing 2
-   data[1].map(function(d){
-      marker = []
-      d.map(function(d){
-        marker.push({x: xScale(d.x), y: yScale(d.y), z: zScale(d.z), id: 'point_' + cnt++});
+      swing.forEach(function(d){
+        var data = [
+          grid3d(xGrid),
+          point3d(d),
+          yScale3d([yLine])
+        ];
+        data1.push(data);
       })
-      swing2.push(marker);
-    });
+
+      data_all.push(data1)
+    })
   }
   //*********** individual swing sequence
   else if (type_swing == 0){
@@ -418,46 +325,9 @@ function init(data, type_swing){
     }
   }
 
-  
-  // create 20x20 grid
-    var cnt = 0;
-    xGrid = [], scatter = [], yLine = [];
-    for(var z = -j; z < j; z++){
-        for(var x = -j; x < j; x++){
-            xGrid.push([x, 1, z]);
-        }
-    }
 
-    //y axis line
-    d3.range(-1, j+1, 1).forEach(function(d){ yLine.push([-j, -d, -j]); });
-
-    // format data to be plotted in processData function
-    var data1 = [];
-    var data2 = [];
-
-    swing.forEach(function(d){
-      var data = [
-        grid3d(xGrid),
-        point3d(d),
-        yScale3d([yLine])
-      ];
-      data1.push(data);
-    })
-
-    swing2.forEach(function(d){
-      var data = [
-        grid3d(xGrid),
-        point3d(d),
-        yScale3d([yLine])
-      ];
-      data2.push(data);
-    })
-
-
-    data_all = [data1, data2]
-
-    //ready to be plotted
-    processData(data_all, 1000);
+  //ready to be plotted
+  processData(data_all, 1000);
 
 }
 
@@ -481,6 +351,12 @@ Promise.all([
   default_start_all = [default_start, default_start2]
   
   init(default_start_all, 1)
+
+
+  // ** Update data section (Called from the onclick)
+  function updateData() {
+    console.log("button works!")
+  }
   
   //SIMPLE SLIDER BAR///////////////////////////////
   //generate slider bar values
@@ -685,25 +561,19 @@ function dragged(){
     beta   = (d3.event.x - mx + mouseX) * Math.PI / 230 ;
     alpha  = (d3.event.y - my + mouseY) * Math.PI / 230  * (-1);
 
-    var data_drag1 = []
-    swing.forEach(function(d){
-      data_drag1.push([
-        grid3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)(xGrid),
-        point3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)(d),
-        yScale3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)([yLine]),
-      ])  
-    })
-
-    var data_drag2 = []
-    swing2.forEach(function(d){
-      data_drag2.push([
-        grid3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)(xGrid),
-        point3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)(d),
-        yScale3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)([yLine]),
-      ])  
-    })
-
-    data_drag = [data_drag1, data_drag2]
+    data_drag = []
+    all_swings.forEach(function(x){    
+      var data_drag_ind = []
+      x.forEach(function(d){
+        data_drag_ind.push([
+          grid3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)(xGrid),
+          point3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)(d),
+          yScale3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)([yLine]),
+        ])  
+      })
+      
+      data_drag.push(data_drag_ind)
+    });
 
     processData(data_drag, 0);
     

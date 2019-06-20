@@ -271,8 +271,9 @@ function init(data, type_swing){
     ])
     .range([-j, j]);
   
-  //************* look at sections of the swing at a time  
-  
+
+
+  //************* look at sections of the swing at a time ******************  
   if (type_swing == 1){
 
     //will hold the swing coordinates for drag rotation function later
@@ -316,7 +317,7 @@ function init(data, type_swing){
   }
 
 
-  //*********** individual swing sequence
+  //*********** individual swing sequence *********************************
   else if (type_swing == 0){
 
     //will hold the swing coordinates for drag rotation function later
@@ -381,28 +382,23 @@ function init(data, type_swing){
 var swing_csv1 = 'swing_test.csv'
 var swing_csv2 = 'swing_test2.csv'
 
-
 Promise.all([
   d3.csv(swing_csv1),
   d3.csv(swing_csv2)
-]).then(function(data, key) {
+]).then(function joey(data, key) {
   
   //start screen to show all data
   default_start = init_range(data[0], 0, 0)
   default_start2 = init_range(data[1], 0, 0)
 
   default_start_all = [default_start, default_start2]
+  default_start_all = [default_start]
   
   init(default_start_all, 1)
 
-
-  // ** Update data section (Called from the onclick)
-  function updateData() {
-    console.log("button works!")
-  }
-  
-  //SIMPLE SLIDER BAR///////////////////////////////
-  //generate slider bar values
+  data[0].name = 'Swing 1'
+  data[1].name = 'Swing 2'
+  //BUTTON//////////////////////////////////////////////////
   const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
   var data2 = range(0,data[0].length,1);
   
@@ -414,7 +410,7 @@ Promise.all([
       .width(800)
       .ticks(5)
       .step(1)
-      .default(0)
+      .default(10)
       .fill('#2196f3');
 
   var gSimple = d3
@@ -425,77 +421,320 @@ Promise.all([
       .append('g')
       .attr('transform', 'translate(30,30)')
       .call(sliderStep);
+
+  //hide for now
+  d3
+    .select('#slider')
+    .style('visibility', 'hidden')
+
+    var sliderRange=[];
+    var sliderRange = d3
+      .sliderBottom()
+      .min(d3.min(data2))
+      .max(d3.max(data2))
+      .width(800)
+      .ticks(5)
+      .default([0, d3.max(data2)])
+      .step(1)
+      .fill('#2196f3')
+
+    var gRange = d3
+      .select('#newRange')
+      .append('svg')
+      .attr('id', 'range')
+      .attr('width', 1000)
+      .attr('height', 100)
+      .append('g')
+      .attr('transform', 'translate(30,30)')
+      .call(sliderRange);
+
+  //hide for now
+  d3
+    .select('#newRange')
+    .style('visibility', 'hidden')
+ 
+  d3
+    .selectAll("#sequence")
+    .attr('checked', true)
+    .on("change", work); 
+
+  function work(){
+    if (this.value=='ind_swing'){
+
+      //refresh data points/lines
+      //d3.selectAll("#range").remove();
+      d3
+        .select('#newRange')
+        .style('visibility', 'hidden')
+
+      d3
+        .select('#slider')
+        .style('visibility', 'visible')
+
+      idk(sliderStep, 0);
+    
+    }
+    else if (this.value=='range_swing'){
+      d3
+      .select('#slider')
+      .style('visibility', 'hidden')
+      
+      d3
+      .select('#newRange')
+      .style('visibility', 'visible')
+
+
+      idk(sliderRange, 1);
+
+      } 
+
+  }
+
+
+function idk(sliderRange, val){
+
+  //refresh checkboxes
+  d3.selectAll("label").remove();
+
+  names = ['Swing 1', 'Swing 2']
+  d3
+    .select("#test")
+    .selectAll("input")
+    //.data(['Swing 1', 'Swing 2'])
+    .data(data)
+    .enter()
+    .append('label')
+      //.text(function(d) { return d; })
+      .text(function(d) { return d.name; })
+    .append("input")
+        .attr("type", "checkbox")
+        .attr('id', 'please_work')
+        .on("change", update
+        );
   
-  //slider to change markers shown
-  sliderStep
+
+  function update(){
+    var default_range = sliderRange.value()
+    //console.log(default_range)
+
+    var default_indiv = sliderStep.value()
+    console.log(default_indiv)
+
+    //refresh data points/lines
+    d3.selectAll("path").attr('id','lines').remove();
+    d3.selectAll("circle").remove();
+
+    var choices = [];
+    d3
+    .selectAll("#please_work")
+    .each(function(d){
+      cb = d3.select(this);
+      //console.log(cb.property)
+      if(cb.property("checked")){
+        //console.log(cb._groups[0][0].__data__.name)
+        choices.push(cb._groups[0][0].__data__);
+      }
+    });
+       
+    if (val == 1){
+    //call function to slice/clean/format data
+    default_start_all = [];
+    choices.forEach(function(d){
+      default_start = init_range(d, default_range, 1)
+      default_start_all.push(default_start)
+    })
+
+    //pass to scaling/plot format function
+    init(default_start_all, 1);
+
+    
+    //generate event on change
+    sliderRange
+      .on('onchange', val => {
+        Promise.all([
+          d3.csv(swing_csv1),
+          d3.csv(swing_csv2)
+        ]).then(function(data, key) {
+
+          //refresh data points/lines
+          d3.selectAll("path").attr('id','lines').remove();
+          d3.selectAll("circle").remove();
+
+          var choices = [];
+          d3
+          .selectAll("#please_work")
+          .each(function(d){
+            cb = d3.select(this);
+            //console.log(cb.property)
+            if(cb.property("checked")){
+              //console.log(cb._groups[0][0].__data__.name)
+              choices.push(cb._groups[0][0].__data__);
+            }
+          });
+        
+        //call function to slice/clean/format data
+        default_start_all = [];
+        choices.forEach(function(d){
+          default_start = init_range(d, val, 1)
+          default_start_all.push(default_start)
+        })
+
+        //pass to scaling/plot format function
+        init(default_start_all, 1);
+      });
+      
+    });
+  }
+
+  if (val == 0 ){
+    //call function to slice/clean/format data
+    default_start_all = [];
+    choices.forEach(function(d){
+      default_start = init_data_single(d, default_indiv)
+      default_start_all.push(default_start)
+    })
+
+    console.log(default_start_all)
+    //pass to scaling/plot format function
+    init(default_start_all, 0);
+
+    //slider to change markers shown
+    sliderStep
       .on('onchange', val => {
           Promise.all([
             d3.csv(swing_csv1),
             d3.csv(swing_csv2)
           ]).then(function(data, key) {
 
-              //refresh data points/lines
-              d3.selectAll("path").attr('id','lines').remove();
-              d3.selectAll("circle").remove();
-              
-              //call function to slice/clean/format data
-              please = init_data_single(data[0], val)
-              please2 = init_data_single(data[1], val)
+            //refresh data points/lines
+            d3.selectAll("path").attr('id','lines').remove();
+            d3.selectAll("circle").remove();
 
-              //combine into 1 list
-              please_work = [please, please2]
-              
-              //pass to scaling/plot format function
-              init(please_work, 0);
+            var choices = [];
+            d3
+            .selectAll("#please_work")
+            .each(function(d){
+              cb = d3.select(this);
+              //console.log(cb.property)
+              if(cb.property("checked")){
+                //console.log(cb._groups[0][0].__data__.name)
+                choices.push(cb._groups[0][0].__data__);
+              }
+            });
+            
+            //call function to slice/clean/format data
+            default_start_all = [];
+            choices.forEach(function(d){
+              default_start = init_data_single(d, val)
+              default_start_all.push(default_start)
+            })
+
+            //pass to scaling/plot format function
+            init(default_start_all, 0);
           });
       });
+
+  }
+
+  }
+}
+
+
+  //SIMPLE SLIDER BAR///////////////////////////////
+  //generate slider bar values
+  // const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
+  // var data2 = range(0,data[0].length,1);
+  
+  // //append slide bar to page with given parameters
+  // var sliderStep = d3
+  //     .sliderBottom()
+  //     .min(d3.min(data2))
+  //     .max(d3.max(data2))
+  //     .width(800)
+  //     .ticks(5)
+  //     .step(1)
+  //     .default(0)
+  //     .fill('#2196f3');
+
+  // var gSimple = d3
+  //     .select('#slider')
+  //     .append('svg')
+  //     .attr('width', 1000)
+  //     .attr('height', 100)
+  //     .append('g')
+  //     .attr('transform', 'translate(30,30)')
+  //     .call(sliderStep);
+  
+  // //slider to change markers shown
+  // sliderStep
+  //     .on('onchange', val => {
+  //         Promise.all([
+  //           d3.csv(swing_csv1),
+  //           d3.csv(swing_csv2)
+  //         ]).then(function(data, key) {
+
+  //             //refresh data points/lines
+  //             d3.selectAll("path").attr('id','lines').remove();
+  //             d3.selectAll("circle").remove();
+              
+  //             //call function to slice/clean/format data
+  //             please = init_data_single(data[0], val)
+  //             please2 = init_data_single(data[1], val)
+
+  //             //combine into 1 list
+  //             please_work = [please, please2]
+              
+  //             //pass to scaling/plot format function
+  //             init(please_work, 0);
+  //         });
+  //     });
 
 
 //RANGE SLIDER BAR////////////////////////////////
 
 //append new range slider bar to page with given parameters
-var sliderRange = d3
-  .sliderBottom()
-  .min(d3.min(data2))
-  .max(d3.max(data2))
-  .width(800)
-  .ticks(5)
-  .default([1, 5])
-  .step(1)
-  .fill('#2196f3')
+// var sliderRange = d3
+//   .sliderBottom()
+//   .min(d3.min(data2))
+//   .max(d3.max(data2))
+//   .width(800)
+//   .ticks(5)
+//   .default([0, d3.max(data2)])
+//   .step(1)
+//   .fill('#2196f3')
 
-var gRange = d3
-  .select('#range')
-  .append('svg')
-  .attr('width', 1000)
-  .attr('height', 100)
-  .append('g')
-  .attr('transform', 'translate(30,30)')
-  .call(sliderRange);
+// var gRange = d3
+//   .select('#range')
+//   .append('svg')
+//   .attr('width', 1000)
+//   .attr('height', 100)
+//   .append('g')
+//   .attr('transform', 'translate(30,30)')
+//   .call(sliderRange);
 
-//generate event on change
-sliderRange
-  .on('onchange', val => {
-    Promise.all([
-      d3.csv(swing_csv1),
-      d3.csv(swing_csv2)
-    ]).then(function(data, key) {
+// //generate event on change
+// sliderRange
+//   .on('onchange', val => {
+//     Promise.all([
+//       d3.csv(swing_csv1),
+//       d3.csv(swing_csv2)
+//     ]).then(function(data, key) {
 
-      //refresh data points/lines
-      d3.selectAll("path").attr('id','lines').remove();
-      d3.selectAll("circle").remove();
+//       //refresh data points/lines
+//       d3.selectAll("path").attr('id','lines').remove();
+//       d3.selectAll("circle").remove();
       
-      //call function to slice/clean/format data
-      please1 = init_range(data[0], val, 1)
-      please2 = init_range(data[1], val, 1)
+//       //call function to slice/clean/format data
+//       please1 = init_range(data[0], val, 1)
+//       please2 = init_range(data[1], val, 1)
 
-      //combine into 1 list
-      please_work = [please1, please2]
+//       //combine into 1 list
+//       please_work = [please1, please2]
 
-      //pass to scaling/plot format function
-      init(please_work, 1);
-    });
-  });
+//       //pass to scaling/plot format function
+//       init(please_work, 1);
+//     });
+//   });
 });
 
 

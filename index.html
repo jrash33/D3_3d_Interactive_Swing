@@ -18,22 +18,55 @@
 </head>
 
 <body>
-    <div id="option">
-        <input name="updateButton" 
-               type="button" 
-               value="Swing 2" 
-               onclick="updateData()"/>
+
+  <div class="container-fluid" style="width:1500px">
+    
+    <!-- <input type="checkbox" class="myCheckbox" value="swing1"> Swing 1
+    <input type="checkbox" class="myCheckbox" value="swing2"> Swing 2 -->
+    <div class='row'>
+    <img src="titleist_mocap_logo.png">
     </div>
 
-    <div id="slider">
-      <div id="label">Individual Swing Sequence</div>
+    <!-- <div class='row'>
+    <form>
+    <input id="sequence" type="radio" name="stack" value="ind_swing">Individual<br>
+    <input id="sequence" type="radio" name="stack" value="range_swing">Range<br>
+    </form>
+    </div> -->
+  
+
+    
+    <div id='newSlider'>
+      <div id="slider">
+        <div id="label">Individual Swing Sequence</div>
+      </div>
     </div>
     
-    <div id="range">
-      <div id="label">Range Swing Sequence</div>
+    <div id='newRange'>
+      <div id="range">
+        <div id="label">Range Swing Sequence</div>
+      </div>
     </div>
 
-    <div id="scatter"></div>
+    <div class="row">
+
+      <div class = "col-lg-1">
+        <form>
+            <input id="sequence" type="radio" name="stack" value="ind_swing">Individual<br>
+            <input id="sequence" type="radio" name="stack" value="range_swing">Range<br>
+        </form>
+
+        <div id="test"></div>
+
+        <div id="option"></div>
+      </div>
+
+      <div class = "col-lg-11">
+        <div id="scatter"></div>
+      </div>
+    </div>
+
+  </div>
   
 
   
